@@ -15,7 +15,7 @@ class CalendarioScreen extends StatefulWidget {
 class _CalendarioScreenState extends State<CalendarioScreen> {
   DateTime _diaEnfocado = DateTime.now();
   DateTime _diaSeleccionado = DateTime.now();
-  Map<DateTime, List<String>> _notasPorDia = {};
+  Map<DateTime, List<Recordatorio>> _notasPorDia = {};
 
   DateTime _normalizarFecha(DateTime date) {
     //Función para que coincida los días y no las horas
@@ -206,17 +206,22 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                                     )]!
                                     .length,
                             itemBuilder: (context, index) {
+                              final recordatorio = _notasPorDia[_normalizarFecha(_diaSeleccionado)]![index];
                               return Card(
                                 color: const Color(0xFFFFF9C4),
                                 margin: const EdgeInsets.only(bottom: 10),
                                 child: ListTile(
                                   title: Text(
-                                    _notasPorDia[_normalizarFecha(
-                                      _diaSeleccionado,
-                                    )]![index],
+                                    recordatorio.titulo,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    subtitle: Text(
+                                      "${recordatorio.categoria} • ${recordatorio.hora.format(context)}",
+                                      style: TextStyle(color: Colors.grey[700]),
+                                    ),
+                                    trailing: const Icon(Icons.chevron_right, size: 16),
                                   ),
-                                ),
-                              );
+                                );
                             },
                           ),
                   ),
@@ -227,7 +232,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton( //Botón de crear recordatorio
         onPressed: () {
           showModalBottomSheet(
             context: context, 
@@ -244,17 +249,30 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                   Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
                   const SizedBox(height: 20),
                   ListTile(
-                    leading: const CircleAvatar(backgroundColor: Colors.black, child: Icon(Icons.add, color: Colors.white)),
-                    title: const Text("Crear un nuevo recordatorio", style: TextStyle(fontWeight: FontWeight.bold)),
-                    onTap: () async {
+                    leading: const Icon(Icons.add, color: Colors.blue),
+                    title: const Text("Nuevo recordatorio"),
+                    onTap: () async { //Esto hace que espere
                       Navigator.pop(context); //Cierra el menú
                       final resultado = await Navigator.push( //Navega a la nueva pantalla
                         context,
-                        MaterialPageRoute(builder: (context) => FormularioScreen(fechaSeleccionada: _diaSeleccionado)),
+                        MaterialPageRoute(
+                          builder: (context) => FormularioScreen(
+                            fechaSeleccionada: _diaSeleccionado
+                          )
+                        ),
                       );
-                      //Cuando el usuario guarda, se procesa aquí
-                      if (resultado != null) {
-                        print("Recibido: ${resultado['titulo']}");
+
+                      //Cuando el usuario guarda, se procesa aquí, si no pulsa atrás y hay recordatorio pasa esto
+                      if (resultado != null && resultado is Recordatorio) {
+                        setState(() {
+                          DateTime fechaKey = _normalizarFecha(resultado.fecha); //Normalizamos la fecha para q no haya problemas con las horas
+
+                          if (_notasPorDia[fechaKey] == null) { //Si no hay notas para ese día se crea la lista
+                            _notasPorDia[fechaKey] = [];
+                          }
+                          _notasPorDia[fechaKey]!.add(resultado);
+                        });
+                        print("¡Guardado!: ${resultado.titulo}");
                       }
                     },
                   ),
