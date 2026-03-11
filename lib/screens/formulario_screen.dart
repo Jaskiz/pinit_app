@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/recordatorio_model.dart';
 
 class FormularioScreen extends StatefulWidget {
   final DateTime fechaSeleccionada;
@@ -20,6 +21,10 @@ class _FormularioScreenState extends State<FormularioScreen> {
   bool _guardarComoPlantilla = false;
   String _antelacion = 'Al momento';
   String _tono = 'Predeterminado';
+  TimeOfDay _horaSeleccionada = TimeOfDay.now();
+  String _categoriaSeleccionada = 'Trabajo';
+  String _antelacionSeleccionada = '5 minutos';
+  String _tonoSeleccionado = 'Predeterminado';
 
   @override
   void initState() {
@@ -259,12 +264,18 @@ class _FormularioScreenState extends State<FormularioScreen> {
 
   void _guardarTodo() {
     if (_formKey.currentState!.validate()) {
-      //Devolvemos los datos a la página anterior
-      Navigator.pop(context, {
-        'titulo': _tituloController.text,
-        'fecha': _fecha,
-        'esPlantilla': _guardarComoPlantilla,
-      });
+      //Creamos el objeto con los datos del formulario
+     final nuevoRecordatorio = Recordatorio(
+      titulo: _tituloController.text,
+      notas: _notasController.text,
+      fecha: widget.fechaSeleccionada,
+      hora: _horaSeleccionada,
+      categoria: _categoriaSeleccionada,
+      esPlantilla: false,
+      antelacion: _antelacionSeleccionada,
+      tono: _tonoSeleccionado,
+     );
+     Navigator.pop(context, nuevoRecordatorio);
+      }
     }
   }
-}

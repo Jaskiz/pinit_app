@@ -14,12 +14,12 @@ class Recordatorio {
 
   Recordatorio({
     required this.titulo,
-    this.notas = "",
+    required this.notas,
     required this.fecha,
     required this.hora,
-    this.categoria = "General",
+    required this.categoria,
     this.esPlantilla = false,
-    this.antelacion = "Al momento",
-    this.tono = "Predeterminado",
+    required this.antelacion,
+    required this.tono,
   });
 }

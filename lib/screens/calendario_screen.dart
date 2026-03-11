@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'formulario_screen.dart';
 import '../models/recordatorio_model.dart';
 
+
 class CalendarioScreen extends StatefulWidget {
   const CalendarioScreen({super.key});
 
@@ -20,6 +21,25 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   DateTime _normalizarFecha(DateTime date) {
     //Función para que coincida los días y no las horas
     return DateTime(date.year, date.month, date.day);
+  }
+
+  Future<void> _abrirFormulario() async {
+    final resultado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FormularioScreen(
+          fechaSeleccionada: _diaSeleccionado,
+        ),
+      ),
+    );
+
+    if (resultado != null && resultado is Recordatorio) {
+      setState(() {
+        DateTime fechaKey = _normalizarFecha(resultado.fecha);
+       (_notasPorDia[fechaKey] ??= []).add(resultado);
+        _notasPorDia[fechaKey]!.add(resultado);
+      });
+    }
   }
 
   @override
@@ -202,26 +222,32 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                         : ListView.builder(
                             itemCount:
                                 _notasPorDia[_normalizarFecha(
-                                      _diaSeleccionado,
-                                    )]!
-                                    .length,
+                                      _diaSeleccionado)]?.length ?? 0,
                             itemBuilder: (context, index) {
-                              final recordatorio = _notasPorDia[_normalizarFecha(_diaSeleccionado)]![index];
+                              final lista =
+                                  _notasPorDia[_normalizarFecha(
+                                    _diaSeleccionado)]!;
+                                    final recordatorio = lista[index];
                               return Card(
                                 color: const Color(0xFFFFF9C4),
                                 margin: const EdgeInsets.only(bottom: 10),
                                 child: ListTile(
                                   title: Text(
                                     recordatorio.titulo,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    subtitle: Text(
-                                      "${recordatorio.categoria} • ${recordatorio.hora.format(context)}",
-                                      style: TextStyle(color: Colors.grey[700]),
-                                    ),
-                                    trailing: const Icon(Icons.chevron_right, size: 16),
                                   ),
-                                );
+                                  subtitle: Text(
+                                    "${recordatorio.categoria} • ${recordatorio.hora.format(context)}",
+                                    style: TextStyle(color: Colors.grey[700]),
+                                  ),
+                                  trailing: const Icon(
+                                    Icons.chevron_right,
+                                    size: 16,
+                                  ),
+                                ),
+                              );
                             },
                           ),
                   ),
@@ -232,10 +258,11 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton( //Botón de crear recordatorio
+      floatingActionButton: FloatingActionButton(
+        //Botón de crear recordatorio
         onPressed: () {
           showModalBottomSheet(
-            context: context, 
+            context: context,
             backgroundColor: Colors.transparent,
             builder: (context) => Container(
               padding: const EdgeInsets.all(24),
@@ -246,39 +273,39 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-                  const SizedBox(height: 20),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   ListTile(
                     leading: const Icon(Icons.add, color: Colors.blue),
-                    title: const Text("Nuevo recordatorio"),
-                    onTap: () async { //Esto hace que espere
-                      Navigator.pop(context); //Cierra el menú
-                      final resultado = await Navigator.push( //Navega a la nueva pantalla
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FormularioScreen(
-                            fechaSeleccionada: _diaSeleccionado
-                          )
-                        ),
-                      );
+                    title: const Text(
+                      "Nuevo recordatorio",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    onTap: () {
+                      //Esto hace que espere
+                      Navigator.pop(context);
+                      _abrirFormulario(); //Cierra el menú
 
-                      //Cuando el usuario guarda, se procesa aquí, si no pulsa atrás y hay recordatorio pasa esto
-                      if (resultado != null && resultado is Recordatorio) {
-                        setState(() {
-                          DateTime fechaKey = _normalizarFecha(resultado.fecha); //Normalizamos la fecha para q no haya problemas con las horas
-
-                          if (_notasPorDia[fechaKey] == null) { //Si no hay notas para ese día se crea la lista
-                            _notasPorDia[fechaKey] = [];
-                          }
-                          _notasPorDia[fechaKey]!.add(resultado);
-                        });
-                        print("¡Guardado!: ${resultado.titulo}");
-                      }
                     },
                   ),
                   ListTile(
-                    leading: const CircleAvatar(backgroundColor: Color(0xFFF2F2F7), child: Icon(Icons.copy, color: Colors.black)),
-                    title: const Text("Utilizar plantilla guardada", style: TextStyle(fontWeight: FontWeight.bold)),
+                    leading: const Icon(Icons.copy, color: Colors.orange),
+                    title: const Text(
+                      'Utilizar plantilla guardada',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                     onTap: () {
                       Navigator.pop(context);
                     },

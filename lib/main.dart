@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'screens/calendario_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
-  runApp(const MiAppPostIt());
+  initializeDateFormatting('es_ES', null).then((_) => runApp(const MiAppPostIt()));
 }
 
 class MiAppPostIt extends StatelessWidget {
