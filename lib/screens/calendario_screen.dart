@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'formulario_screen.dart';
 import '../models/recordatorio_model.dart';
 
-
 class CalendarioScreen extends StatefulWidget {
   const CalendarioScreen({super.key});
 
@@ -27,17 +26,26 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
     final resultado = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FormularioScreen(
-          fechaSeleccionada: _diaSeleccionado,
-        ),
+        builder: (context) =>
+            FormularioScreen(fechaSeleccionada: _diaSeleccionado),
       ),
     );
 
     if (resultado != null && resultado is Recordatorio) {
       setState(() {
         DateTime fechaKey = _normalizarFecha(resultado.fecha);
-       (_notasPorDia[fechaKey] ??= []).add(resultado);
-        _notasPorDia[fechaKey]!.add(resultado);
+        final listaExistence = _notasPorDia[fechaKey] ?? [];
+        if (_notasPorDia[fechaKey] == null) {
+          _notasPorDia[fechaKey] = [];
+        }
+
+        bool yaExiste = _notasPorDia[fechaKey]!.any(
+          (r) => r.id == resultado.id,
+        );
+
+        if (!yaExiste) {
+          _notasPorDia[fechaKey]!.add(resultado);
+        }
       });
     }
   }
@@ -156,20 +164,51 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
 
                   if (notasDeEseDia.isNotEmpty) {
                     return Positioned(
-                      bottom: 10,
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 0.5),
-                          gradient: const RadialGradient(
-                            colors: [Colors.white, Color(0xFFFF4081)],
-                            center: Alignment(0.4, -0.4),
-                            radius: 0.6,
-                            stops: [0.1, 0.9],
-                          ),
-                        ),
+                      bottom: 5,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ...notasDeEseDia.take(3).map((nota) {
+                            //Máximo 3 bolitas
+                            return Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.black,
+                                  width: 0.5,
+                                ),
+                                gradient: const RadialGradient(
+                                  colors: [
+                                    Colors.white, // El brillo central
+                                    Color(0xFFFFD700), // El amarillo (Gold)
+                                  ],
+                                  center: Alignment(
+                                    0.4,
+                                    -0.4,
+                                  ), // Posición del reflejo
+                                  radius: 0.6,
+                                  stops: [0.1, 0.9],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          if (notasDeEseDia.length > 3)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 2),
+                              child: Text(
+                                "+${notasDeEseDia.length - 3}",
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     );
                   }
@@ -221,33 +260,44 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                           )
                         : ListView.builder(
                             itemCount:
-                                _notasPorDia[_normalizarFecha(
-                                      _diaSeleccionado)]?.length ?? 0,
+                                _notasPorDia[_normalizarFecha(_diaSeleccionado)]
+                                    ?.length ??
+                                0,
                             itemBuilder: (context, index) {
                               final lista =
                                   _notasPorDia[_normalizarFecha(
-                                    _diaSeleccionado)]!;
-                                    final recordatorio = lista[index];
-                              return Card(
-                                color: const Color(0xFFFFF9C4),
-                                margin: const EdgeInsets.only(bottom: 10),
-                                child: ListTile(
-                                  title: Text(
-                                    recordatorio.titulo,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                    _diaSeleccionado,
+                                  )]!;
+                              final recordatorio = lista[index];
+                              return GestureDetector(
+                                // <--- AÑADE ESTO
+                                onTap: () {
+                                  _mostrarDetallesNota(
+                                    context,
+                                    recordatorio,
+                                  ); // <--- Y ESTO
+                                },
+                                child: Card(
+                                  color: const Color(0xFFFFF9C4),
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  child: ListTile(
+                                    title: Text(
+                                      recordatorio.titulo,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      "${recordatorio.categoria} • ${recordatorio.hora.format(context)}",
+                                      style: TextStyle(color: Colors.grey[700]),
+                                    ),
+                                    trailing: const Icon(
+                                      Icons.chevron_right,
+                                      size: 16,
                                     ),
                                   ),
-                                  subtitle: Text(
-                                    "${recordatorio.categoria} • ${recordatorio.hora.format(context)}",
-                                    style: TextStyle(color: Colors.grey[700]),
-                                  ),
-                                  trailing: const Icon(
-                                    Icons.chevron_right,
-                                    size: 16,
-                                  ),
                                 ),
-                              );
+                              ); // Cerramos el gesture detector
                             },
                           ),
                   ),
@@ -294,7 +344,6 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                       //Esto hace que espere
                       Navigator.pop(context);
                       _abrirFormulario(); //Cierra el menú
-
                     },
                   ),
                   ListTile(
@@ -318,6 +367,42 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
         backgroundColor: Colors.black,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(Icons.add, color: Colors.white, size: 30),
+      ),
+    );
+  }
+
+  void _mostrarDetallesNota(BuildContext context, Recordatorio nota) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(
+          nota.titulo,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 18),
+                const SizedBox(width: 5),
+                Text(nota.hora.format(context)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text("Categoría: ${nota.categoria}"),
+            const Divider(height: 25),
+            Text(nota.notas.isEmpty ? "Sin notas adicionales" : nota.notas),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cerrar"),
+          ),
+        ],
       ),
     );
   }

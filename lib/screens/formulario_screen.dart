@@ -16,13 +16,12 @@ class _FormularioScreenState extends State<FormularioScreen> {
   final TextEditingController _notasController = TextEditingController();
   final TextEditingController _horaController = TextEditingController();
   DateTime _fecha = DateTime.now();
-  TimeOfDay _hora = TimeOfDay.now();
+  TimeOfDay _horaSeleccionada = TimeOfDay.now();
   String _categoria = 'General';
   bool _guardarComoPlantilla = false;
   String _antelacion = 'Al momento';
   String _tono = 'Predeterminado';
-  TimeOfDay _horaSeleccionada = TimeOfDay.now();
-  String _categoriaSeleccionada = 'Trabajo';
+  String _categoriaSeleccionada = 'General';
   String _antelacionSeleccionada = '5 minutos';
   String _tonoSeleccionado = 'Predeterminado';
 
@@ -96,7 +95,7 @@ class _FormularioScreenState extends State<FormularioScreen> {
             //Fecha y hora
             const Text(
               "Seleccionar fecha y hora",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
             const SizedBox(height: 10),
             Row(
@@ -146,9 +145,11 @@ class _FormularioScreenState extends State<FormularioScreen> {
                       ),
                       onChanged: (val) {
                         //Lógica para que se pone el : en medio
-                        if (val.length == 2 && !_horaController.text.contains(':')) {
+                        if (val.length == 2 &&
+                            !_horaController.text.contains(':')) {
                           _horaController.text = "$val:";
-                          _horaController.selection = TextSelection.fromPosition(
+                          _horaController
+                              .selection = TextSelection.fromPosition(
                             TextPosition(offset: _horaController.text.length),
                           );
                         }
@@ -160,21 +161,22 @@ class _FormularioScreenState extends State<FormularioScreen> {
                           final m = int.tryParse(partes[1]);
                           if (h != null && m != null && h < 24 && m < 60) {
                             setState(() {
-                              _hora = TimeOfDay(hour: h, minute: m);
+                              _horaSeleccionada = TimeOfDay(hour: h, minute: m);
                             });
                           }
                         }
-                      }
-                    )
-                  )
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),
 
             //Ajustes avanzados
+            const SizedBox(height: 25),
             const Text(
               "Ajustes avanzados",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Container(
@@ -190,14 +192,22 @@ class _FormularioScreenState extends State<FormularioScreen> {
                   ListTile(
                     title: const Text("Categoría"),
                     trailing: DropdownButton<String>(
-                      value: _categoria,
-                      underline: Container(),
-                      items: ['General', 'Salud', 'Trabajo', 'Compras']
-                          .map(
-                            (s) => DropdownMenuItem(value: s, child: Text(s)),
-                          )
-                          .toList(),
-                      onChanged: (val) => setState(() => _categoria = val!),
+                      value:
+                          _categoriaSeleccionada, // Asegúrate de que esta variable sea la que usas
+                      items: ['Trabajo', 'Personal', 'Salud', 'General'].map((
+                        String valor,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: valor,
+                          child: Text(valor),
+                        );
+                      }).toList(),
+                      onChanged: (nuevoValor) {
+                        setState(() {
+                          _categoriaSeleccionada =
+                              nuevoValor!; // Actualiza el estado
+                        });
+                      },
                     ),
                   ),
                   ListTile(
@@ -257,25 +267,31 @@ class _FormularioScreenState extends State<FormularioScreen> {
   void _seleccionarHora() async {
     TimeOfDay? pick = await showTimePicker(
       context: context,
-      initialTime: _hora,
+      initialTime: _horaSeleccionada,
     );
-    if (pick != null) setState(() => _hora = pick);
+    if (pick != null) {
+      setState(() {
+        _horaSeleccionada = pick;
+        _horaController.text = pick.format(context);
+      });
+    }
   }
 
   void _guardarTodo() {
     if (_formKey.currentState!.validate()) {
       //Creamos el objeto con los datos del formulario
-     final nuevoRecordatorio = Recordatorio(
-      titulo: _tituloController.text,
-      notas: _notasController.text,
-      fecha: widget.fechaSeleccionada,
-      hora: _horaSeleccionada,
-      categoria: _categoriaSeleccionada,
-      esPlantilla: false,
-      antelacion: _antelacionSeleccionada,
-      tono: _tonoSeleccionado,
-     );
-     Navigator.pop(context, nuevoRecordatorio);
-      }
+      final nuevoRecordatorio = Recordatorio(
+        id: DateTime.now().toIso8601String(), //Id único basado en el tiempo
+        titulo: _tituloController.text,
+        notas: _notasController.text,
+        fecha: _fecha,
+        hora: _horaSeleccionada,
+        categoria: _categoriaSeleccionada,
+        esPlantilla: false,
+        antelacion: _antelacionSeleccionada,
+        tono: _tonoSeleccionado,
+      );
+      Navigator.pop(context, nuevoRecordatorio);
     }
   }
+}

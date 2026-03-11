@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 
 class Recordatorio {
+  final String id;
   final String titulo;
   final String notas;
   final DateTime fecha;
@@ -13,6 +14,7 @@ class Recordatorio {
   final String tono;
 
   Recordatorio({
+    required this.id,
     required this.titulo,
     required this.notas,
     required this.fecha,
