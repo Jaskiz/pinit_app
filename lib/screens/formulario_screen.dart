@@ -24,6 +24,7 @@ class _FormularioScreenState extends State<FormularioScreen> {
   String _categoriaSeleccionada = 'General';
   String _antelacionSeleccionada = '5 minutos';
   String _tonoSeleccionado = 'Predeterminado';
+  Color _colorSeleccionado = const Color(0xFFFFD700);
 
   @override
   void initState() {
@@ -245,6 +246,31 @@ class _FormularioScreenState extends State<FormularioScreen> {
                       onChanged: (val) => setState(() => _tono = val!),
                     ),
                   ),
+                  const Divider(), // Una línea fina para separar
+                  ListTile(
+                    title: const Text("Color de la nota"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: _colorSeleccionado,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black26),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
+                    onTap: _abrirPaletaColores, // Llama a la paleta
+                  ),
                 ],
               ),
             ),
@@ -290,8 +316,96 @@ class _FormularioScreenState extends State<FormularioScreen> {
         esPlantilla: false,
         antelacion: _antelacionSeleccionada,
         tono: _tonoSeleccionado,
+        color: _colorSeleccionado,
       );
       Navigator.pop(context, nuevoRecordatorio);
     }
+  }
+
+  void _abrirPaletaColores() {
+    // Lista de colores
+    final List<Color> misColores = [
+      Colors.red, // Rojo fuerte
+      Colors.pink, // Rosa
+      Colors.purple, // Morado
+      Colors.deepPurple, // Violeta oscuro
+      Colors.indigo, // Añil
+      Colors.blue, // Azul real
+      Colors.lightBlue, // Azul cielo
+      Colors.cyan, // Cian
+      Colors.teal, // Verde azulado
+      Colors.green, // Verde bosque
+      Colors.lightGreen, // Verde lima
+      Colors.lime, // Lima
+      Colors.yellow, // Amarillo puro
+      Colors.amber, // Ámbar
+      const Color(0xFFFFD700), // Oro/Post-it
+      Colors.orange, // Naranja
+      Colors.deepOrange, // Naranja fuerte
+      Colors.brown, // Marrón
+      Colors.grey, // Gris
+      Colors.black, // Negro
+    ];
+
+    Widget _buildColorOption(Color color) {
+      return GestureDetector(
+        onTap: () => setState(() => _colorSeleccionado = color),
+        child: Container(
+          width: 35,
+          height: 35,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: _colorSeleccionado == color
+                  ? Colors.black
+                  : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Elige un color"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: GridView.builder(
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5, // 5 por fila para que quepan los 20
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+            ),
+            itemCount: misColores.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _colorSeleccionado = misColores[index]);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: misColores[index],
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 }

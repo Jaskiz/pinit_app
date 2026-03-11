@@ -12,6 +12,7 @@ class Recordatorio {
   final bool esPlantilla;
   final String antelacion;
   final String tono;
+  final Color color;
 
   Recordatorio({
     required this.id,
@@ -23,5 +24,6 @@ class Recordatorio {
     this.esPlantilla = false,
     required this.antelacion,
     required this.tono,
+    required this.color,
   });
 }

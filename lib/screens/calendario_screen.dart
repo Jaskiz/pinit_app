@@ -180,10 +180,10 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                                   color: Colors.black,
                                   width: 0.5,
                                 ),
-                                gradient: const RadialGradient(
+                                gradient: RadialGradient(
                                   colors: [
                                     Colors.white, // El brillo central
-                                    Color(0xFFFFD700), // El amarillo (Gold)
+                                    nota.color, // El amarillo (Gold)
                                   ],
                                   center: Alignment(
                                     0.4,
@@ -270,15 +270,11 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                                   )]!;
                               final recordatorio = lista[index];
                               return GestureDetector(
-                                // <--- AÑADE ESTO
                                 onTap: () {
-                                  _mostrarDetallesNota(
-                                    context,
-                                    recordatorio,
-                                  ); // <--- Y ESTO
+                                  _mostrarDetallesNota(context, recordatorio);
                                 },
                                 child: Card(
-                                  color: const Color(0xFFFFF9C4),
+                                  color: recordatorio.color.withOpacity(0.4),
                                   margin: const EdgeInsets.only(bottom: 10),
                                   child: ListTile(
                                     title: Text(
@@ -375,10 +371,17 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: nota.color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         title: Text(
           nota.titulo,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: nota.color.computeLuminance() < 0.5
+                ? Colors.white
+                : Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
