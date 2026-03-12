@@ -28,11 +28,12 @@ class PostItWidget extends StatelessWidget {
                     Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                            color: color,
+                            color: Colors.white, //Fondo blanco del postit
                             borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: color, width: 1.5), //Borde fino del color elegido
                             boxShadow: [
                                 BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withOpacity(0.1),
                                     blurRadius: 4,
                                     offset: const Offset(2, 2),
                                 ),

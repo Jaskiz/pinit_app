@@ -286,6 +286,25 @@ class _FormularioScreenState extends State<FormularioScreen> {
       initialDate: _fecha,
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
+      builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.black,       // Color de la cabecera y del día seleccionado
+            onPrimary: Colors.white,     // Color del texto sobre el primary
+            surface: Colors.white,       // Fondo del calendario
+            onSurface: Colors.black,     // Color del texto de los días
+          ),
+          dialogBackgroundColor: Colors.white, // Fondo del diálogo
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black, // Color de los botones "Aceptar/Cancelar"
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
     );
     if (pick != null) setState(() => _fecha = pick);
   }
@@ -325,7 +344,7 @@ class _FormularioScreenState extends State<FormularioScreen> {
   void _abrirPaletaColores() {
     // Lista de colores
     final List<Color> misColores = [
-      Colors.red, // Rojo fuerte
+      const Color.fromARGB(255, 228, 0, 0), // Rojo fuerte
       Colors.pink, // Rosa
       Colors.purple, // Morado
       Colors.deepPurple, // Violeta oscuro

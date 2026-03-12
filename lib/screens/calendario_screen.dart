@@ -4,6 +4,7 @@ import '../widgets/post_it_widget.dart';
 import 'package:intl/intl.dart';
 import 'formulario_screen.dart';
 import '../models/recordatorio_model.dart';
+import '../services/db_helper.dart';
 
 class CalendarioScreen extends StatefulWidget {
   const CalendarioScreen({super.key});
@@ -16,6 +17,31 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   DateTime _diaEnfocado = DateTime.now();
   DateTime _diaSeleccionado = DateTime.now();
   Map<DateTime, List<Recordatorio>> _notasPorDia = {};
+
+  @override //Cargamos las notas primero, esto es lo primero que se ejecuta al abrir la app
+  void initState() {
+    super.initState();
+    _cargarNotasDeDB();
+  }
+
+  Future<void> _cargarNotasDeDB() async {
+    //Esta funcion se crea en db_helper y carga las notas
+    final notasCargadas = await DBHelper.obtenerTodos();
+
+    Map<DateTime, List<Recordatorio>> nuevoMapa = {};
+
+    for (var nota in notasCargadas) {
+      DateTime fechaKey = _normalizarFecha(nota.fecha);
+      if (nuevoMapa[fechaKey] == null) {
+        nuevoMapa[fechaKey] = [];
+      }
+      nuevoMapa[fechaKey]!.add(nota);
+    }
+
+    setState(() { //Se actualiza la pantalla con las notas de la base de datos
+      _notasPorDia = nuevoMapa;
+    });
+  }
 
   DateTime _normalizarFecha(DateTime date) {
     //Función para que coincida los días y no las horas
@@ -32,12 +58,13 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
     );
 
     if (resultado != null && resultado is Recordatorio) {
+      await DBHelper.insertar(resultado); //Lo guardamos en la base de datos
       setState(() {
         DateTime fechaKey = _normalizarFecha(resultado.fecha);
-        final listaExistence = _notasPorDia[fechaKey] ?? [];
         if (_notasPorDia[fechaKey] == null) {
           _notasPorDia[fechaKey] = [];
         }
+        _notasPorDia[fechaKey]!.add(resultado);
 
         bool yaExiste = _notasPorDia[fechaKey]!.any(
           (r) => r.id == resultado.id,
@@ -119,6 +146,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
               ),
 
               calendarStyle: CalendarStyle(
+                markerDecoration: BoxDecoration(color: null),
                 outsideDaysVisible: true, //Para ver los dias de otros meses
                 //Unificación tamaño números
                 defaultTextStyle: const TextStyle(
@@ -155,7 +183,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                 ),
               ),
 
-              // 4. Marcadores (Los puntitos de colores)
+              // 4. Marcadores (Las bolas de colores)
               calendarBuilders: CalendarBuilders(
                 markerBuilder: (context, date, events) {
                   //Primero se comprueba si hay notas para el día que está seleccionado
@@ -164,7 +192,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
 
                   if (notasDeEseDia.isNotEmpty) {
                     return Positioned(
-                      bottom: 5,
+                      bottom: 7,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -177,7 +205,7 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.black,
+                                  color: nota.color,
                                   width: 0.5,
                                 ),
                                 gradient: RadialGradient(
@@ -274,13 +302,23 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
                                   _mostrarDetallesNota(context, recordatorio);
                                 },
                                 child: Card(
-                                  color: recordatorio.color.withOpacity(0.4),
+                                  //Nota que se enseña por día
+                                  color: Colors.white,
+                                  elevation: 0,
                                   margin: const EdgeInsets.only(bottom: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: recordatorio.color,
+                                      width: 1.5,
+                                    ),
+                                  ),
                                   child: ListTile(
                                     title: Text(
                                       recordatorio.titulo,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
                                       ),
                                     ),
                                     subtitle: Text(
@@ -371,14 +409,15 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: nota.color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+          side: BorderSide(color: nota.color, width: 2),
+        ),
         title: Text(
           nota.titulo,
           style: TextStyle(
-            color: nota.color.computeLuminance() < 0.5
-                ? Colors.white
-                : Colors.black,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
