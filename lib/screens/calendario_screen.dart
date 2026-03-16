@@ -38,7 +38,8 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
       nuevoMapa[fechaKey]!.add(nota);
     }
 
-    setState(() { //Se actualiza la pantalla con las notas de la base de datos
+    setState(() {
+      //Se actualiza la pantalla con las notas de la base de datos
       _notasPorDia = nuevoMapa;
     });
   }
@@ -414,13 +415,26 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
           borderRadius: BorderRadius.circular(15),
           side: BorderSide(color: nota.color, width: 2),
         ),
-        title: Text(
-          nota.titulo,
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                nota.titulo,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () => _confirmarBorrado(context, nota),
+            ),
+          ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -443,6 +457,37 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("Cerrar"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmarBorrado(BuildContext context, Recordatorio nota) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        title: const Text("Borrar nota?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("no", style: TextStyle(color: Colors.black)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await DBHelper.eliminar(nota.id);
+              if (context.mounted) {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              }
+              _cargarNotasDeDB();
+            },
+            child: const Text(
+              "Sí",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

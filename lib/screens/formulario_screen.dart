@@ -25,6 +25,8 @@ class _FormularioScreenState extends State<FormularioScreen> {
   String _antelacionSeleccionada = '5 minutos';
   String _tonoSeleccionado = 'Predeterminado';
   Color _colorSeleccionado = const Color(0xFFFFD700);
+  int _antelacionMinutos = 0;
+  String _textoAntelacion = 'Al momento';
 
   @override
   void initState() {
@@ -212,24 +214,33 @@ class _FormularioScreenState extends State<FormularioScreen> {
                     ),
                   ),
                   ListTile(
-                    //Antelación
+                    // Antelación
                     title: const Text("Avisar con antelación"),
                     trailing: DropdownButton<String>(
-                      value: _antelacion,
+                      value: ['Al momento', '15 min antes', '1 hora antes', '1 día antes'].contains(_textoAntelacion) 
+                             ? _textoAntelacion : 'Personalizar',
                       underline: Container(),
-                      items:
-                          [
-                                'Al momento',
-                                '15 min antes',
-                                '1 hora antes',
-                                '1 día antes',
-                              ]
-                              .map(
-                                (s) =>
-                                    DropdownMenuItem(value: s, child: Text(s)),
-                              )
-                              .toList(),
-                      onChanged: (val) => setState(() => _antelacion = val!),
+                      items: [
+                        'Al momento', 
+                        '15 min antes', 
+                        '1 hora antes', 
+                        '1 día antes', 
+                        'Personalizar'
+                      ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      onChanged: (val) {
+                        if (val == 'Personalizar') {
+                          _mostrarDialogoPersonalizarAntelacion();
+                        } else {
+                          setState(() {
+                            _textoAntelacion = val!;
+                            _antelacion = val; 
+                            if (val == 'Al momento') _antelacionMinutos = 0;
+                            if (val == '15 min antes') _antelacionMinutos = 15;
+                            if (val == '1 hora antes') _antelacionMinutos = 60;
+                            if (val == '1 día antes') _antelacionMinutos = 1440;
+                          });
+                        }
+                      },
                     ),
                   ),
                   ListTile(
@@ -333,7 +344,8 @@ class _FormularioScreenState extends State<FormularioScreen> {
         hora: _horaSeleccionada,
         categoria: _categoriaSeleccionada,
         esPlantilla: false,
-        antelacion: _antelacionSeleccionada,
+        antelacion: _textoAntelacion,
+        antelacionMinutos: _antelacionMinutos,
         tono: _tonoSeleccionado,
         color: _colorSeleccionado,
       );
@@ -425,6 +437,76 @@ class _FormularioScreenState extends State<FormularioScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _mostrarDialogoPersonalizarAntelacion() {
+    int d = 0, h = 0, m = 0;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        title: const Text("Antelación personalizada"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Con cuánto tiempo de antelación quieres recibir el recordatorio?"),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildSelectorTiempo("Días", 31, (v) => d = v),
+                _buildSelectorTiempo("Horas", 24, (v) => h = v),
+                _buildSelectorTiempo("Min", 60, (v) => m = v),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _antelacionMinutos = (d * 1440) + (h * 60) + m;
+                _textoAntelacion = "${d}d ${h}h ${m}m antes";
+              });
+              Navigator.pop(context);
+            },
+            child: const Text("Aceptar", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectorTiempo(String etiqueta, int max, Function(int) onChange) {
+    return Column(
+      children: [
+        Text(etiqueta, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        SizedBox(
+          height: 100,
+          width: 50,
+          child: ListWheelScrollView.useDelegate(
+            itemExtent: 30,
+            perspective: 0.0005,
+            diameterRatio: 1.2,
+            onSelectedItemChanged: onChange,
+            physics: const FixedExtentScrollPhysics(),
+            childDelegate: ListWheelChildBuilderDelegate(
+              childCount: max,
+              builder: (context, index) => Center(
+                child: Text(
+                  index.toString().padLeft(2, '0'),
+                  style: const TextStyle(fontSize: 18, 
+                  fontWeight: FontWeight.normal, 
+                  color: Colors.black),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

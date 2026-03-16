@@ -11,6 +11,7 @@ class Recordatorio {
   final String antelacion;
   final String tono;
   final Color color;
+  final int antelacionMinutos;
 
   Recordatorio({
     required this.id,
@@ -23,6 +24,7 @@ class Recordatorio {
     required this.antelacion,
     required this.tono,
     required this.color,
+    required this.antelacionMinutos,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +39,7 @@ class Recordatorio {
       'antelacion': antelacion,
       'tono': tono,
       'color': color.value, // Guardamos el valor entero del color
+      'antelacionMinutos': antelacionMinutos,
     };
   }
 
@@ -56,6 +59,7 @@ class Recordatorio {
       antelacion: map['antelacion'],
       tono: map['tono'],
       color: Color(map['color']),
+      antelacionMinutos: map['antelacionMinutos'] ?? 0,
     );
   }
 }

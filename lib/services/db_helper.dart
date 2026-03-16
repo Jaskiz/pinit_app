@@ -12,7 +12,7 @@ class DBHelper {
   }
 
   static Future<Database> _initDB() async {
-    String path = join(await getDatabasesPath(), 'pinit_database.db');
+    String path = join(await getDatabasesPath(), 'pinit_database2.db');
     return await openDatabase(
       path,
       version: 1,
@@ -27,6 +27,7 @@ class DBHelper {
             categoria TEXT, 
             esPlantilla INTEGER, 
             antelacion TEXT, 
+            antelacionMinutos INTEGER,
             tono TEXT, 
             color INTEGER
           )''',
