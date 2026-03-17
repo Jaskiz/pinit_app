@@ -52,4 +52,14 @@ class DBHelper {
     final db = await database;
     await db.delete('recordatorios', where: 'id = ?', whereArgs: [id]);
   }
+
+  static Future<void> actualizar(Recordatorio recordatorio) async {
+  final db = await database;
+  await db.update(
+    'recordatorios',
+    recordatorio.toMap(),
+    where: 'id = ?',
+    whereArgs: [recordatorio.id],
+  );
+}
 }

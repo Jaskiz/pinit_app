@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import '../models/recordatorio_model.dart';
+import '../services/db_helper.dart';
 
 class FormularioScreen extends StatefulWidget {
   final DateTime fechaSeleccionada;
+  final Recordatorio? recordatorioAEditar;
 
-  const FormularioScreen({super.key, required this.fechaSeleccionada});
+  const FormularioScreen({
+    super.key,
+    required this.fechaSeleccionada,
+    this.recordatorioAEditar,
+  });
 
   @override
   State<FormularioScreen> createState() => _FormularioScreenState();
@@ -31,7 +37,23 @@ class _FormularioScreenState extends State<FormularioScreen> {
   @override
   void initState() {
     super.initState();
-    _fecha = widget.fechaSeleccionada;
+    if (widget.recordatorioAEditar != null) {
+      final r = widget.recordatorioAEditar!;
+      _tituloController.text = r.titulo;
+      _notasController.text = r.notas;
+      _fecha = r.fecha;
+      _horaSeleccionada = r.hora;
+      _categoriaSeleccionada = r.categoria;
+      _textoAntelacion = r.antelacion;
+      _antelacionMinutos = r.antelacionMinutos;
+      _colorSeleccionado = r.color;
+      _tono = r.tono;
+      final horas = r.hora.hour.toString().padLeft(2,'0');
+      final minutos = r.hora.minute.toString().padLeft(2, '0');
+      _horaController.text = "$horas:$minutos";
+    } else {
+      _fecha = widget.fechaSeleccionada;
+    }
   }
 
   Widget build(BuildContext context) {
@@ -217,23 +239,36 @@ class _FormularioScreenState extends State<FormularioScreen> {
                     // Antelación
                     title: const Text("Avisar con antelación"),
                     trailing: DropdownButton<String>(
-                      value: ['Al momento', '15 min antes', '1 hora antes', '1 día antes'].contains(_textoAntelacion) 
-                             ? _textoAntelacion : 'Personalizar',
+                      value:
+                          [
+                            'Al momento',
+                            '15 min antes',
+                            '1 hora antes',
+                            '1 día antes',
+                          ].contains(_textoAntelacion)
+                          ? _textoAntelacion
+                          : 'Personalizar',
                       underline: Container(),
-                      items: [
-                        'Al momento', 
-                        '15 min antes', 
-                        '1 hora antes', 
-                        '1 día antes', 
-                        'Personalizar'
-                      ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                      items:
+                          [
+                                'Al momento',
+                                '15 min antes',
+                                '1 hora antes',
+                                '1 día antes',
+                                'Personalizar',
+                              ]
+                              .map(
+                                (s) =>
+                                    DropdownMenuItem(value: s, child: Text(s)),
+                              )
+                              .toList(),
                       onChanged: (val) {
                         if (val == 'Personalizar') {
                           _mostrarDialogoPersonalizarAntelacion();
                         } else {
                           setState(() {
                             _textoAntelacion = val!;
-                            _antelacion = val; 
+                            _antelacion = val;
                             if (val == 'Al momento') _antelacionMinutos = 0;
                             if (val == '15 min antes') _antelacionMinutos = 15;
                             if (val == '1 hora antes') _antelacionMinutos = 60;
@@ -298,24 +333,26 @@ class _FormularioScreenState extends State<FormularioScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
       builder: (context, child) {
-      return Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Colors.black,       // Color de la cabecera y del día seleccionado
-            onPrimary: Colors.white,     // Color del texto sobre el primary
-            surface: Colors.white,       // Fondo del calendario
-            onSurface: Colors.black,     // Color del texto de los días
-          ),
-          dialogBackgroundColor: Colors.white, // Fondo del diálogo
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.black, // Color de los botones "Aceptar/Cancelar"
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary:
+                  Colors.black, // Color de la cabecera y del día seleccionado
+              onPrimary: Colors.white, // Color del texto sobre el primary
+              surface: Colors.white, // Fondo del calendario
+              onSurface: Colors.black, // Color del texto de los días
+            ),
+            dialogBackgroundColor: Colors.white, // Fondo del diálogo
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    Colors.black, // Color de los botones "Aceptar/Cancelar"
+              ),
             ),
           ),
-        ),
-        child: child!,
-      );
-    },
+          child: child!,
+        );
+      },
     );
     if (pick != null) setState(() => _fecha = pick);
   }
@@ -333,11 +370,13 @@ class _FormularioScreenState extends State<FormularioScreen> {
     }
   }
 
-  void _guardarTodo() {
+  void _guardarTodo() async {
     if (_formKey.currentState!.validate()) {
       //Creamos el objeto con los datos del formulario
-      final nuevoRecordatorio = Recordatorio(
-        id: DateTime.now().toIso8601String(), //Id único basado en el tiempo
+      final notaActualizada = Recordatorio(
+        id:
+            widget.recordatorioAEditar?.id ??
+            DateTime.now().toIso8601String(), //Id único basado en el tiempo
         titulo: _tituloController.text,
         notas: _notasController.text,
         fecha: _fecha,
@@ -349,7 +388,15 @@ class _FormularioScreenState extends State<FormularioScreen> {
         tono: _tonoSeleccionado,
         color: _colorSeleccionado,
       );
-      Navigator.pop(context, nuevoRecordatorio);
+
+      if (widget.recordatorioAEditar != null) {
+        await DBHelper.actualizar(notaActualizada); //Si ya existía se actualiza
+      } else {
+        await DBHelper.insertar(notaActualizada); //Si es nueva se inserta
+      }
+      if (mounted) {
+        Navigator.pop(context, notaActualizada);
+      }
     }
   }
 
@@ -452,7 +499,9 @@ class _FormularioScreenState extends State<FormularioScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text("Con cuánto tiempo de antelación quieres recibir el recordatorio?"),
+            const Text(
+              "Con cuánto tiempo de antelación quieres recibir el recordatorio?",
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -473,17 +522,27 @@ class _FormularioScreenState extends State<FormularioScreen> {
               });
               Navigator.pop(context);
             },
-            child: const Text("Aceptar", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Aceptar",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSelectorTiempo(String etiqueta, int max, Function(int) onChange) {
+  Widget _buildSelectorTiempo(
+    String etiqueta,
+    int max,
+    Function(int) onChange,
+  ) {
     return Column(
       children: [
-        Text(etiqueta, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          etiqueta,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
         SizedBox(
           height: 100,
           width: 50,
@@ -498,9 +557,11 @@ class _FormularioScreenState extends State<FormularioScreen> {
               builder: (context, index) => Center(
                 child: Text(
                   index.toString().padLeft(2, '0'),
-                  style: const TextStyle(fontSize: 18, 
-                  fontWeight: FontWeight.normal, 
-                  color: Colors.black),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),

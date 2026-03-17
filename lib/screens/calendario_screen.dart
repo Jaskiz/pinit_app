@@ -453,12 +453,35 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
             Text(nota.notas.isEmpty ? "Sin notas adicionales" : nota.notas),
           ],
         ),
-        actions: [
+        actions: [ //Acciones al abrir la nota
           TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+
+              final resultado = await Navigator.push(
+                context, 
+                MaterialPageRoute(
+                  builder: (context) => FormularioScreen(
+                    fechaSeleccionada: nota.fecha,
+                    recordatorioAEditar: nota,
+                  ),
+                ),
+              );
+              if (resultado != null) {
+                _cargarNotasDeDB();
+              }
+            } ,
+            child: const Text( //Botón de editar
+              "Editar",
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)
+            ),
+          ),
+          TextButton( //Botón de cerrar
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cerrar"),
+            child: const Text("Cerrar", style: TextStyle(color: Colors.black)),
           ),
         ],
+        
       ),
     );
   }
