@@ -349,52 +349,59 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
           showModalBottomSheet(
             context: context,
             backgroundColor: Colors.transparent,
-            builder: (context) => Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.add, color: Colors.blue),
-                    title: const Text(
-                      "Nuevo recordatorio",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
+            isScrollControlled: true,
+            builder: (context) => SafeArea(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                margin: EdgeInsets.only(
+                  //Esto detecta los botones
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.all(Radius.circular(30)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onTap: () {
-                      //Esto hace que espere
-                      Navigator.pop(context);
-                      _abrirFormulario(); //Cierra el menú
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.copy, color: Colors.orange),
-                    title: const Text(
-                      'Utilizar plantilla guardada',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.normal,
+                    ListTile(
+                      leading: const Icon(Icons.add, color: Colors.blue),
+                      title: const Text(
+                        "Nuevo recordatorio",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
+                      onTap: () {
+                        //Esto hace que espere
+                        Navigator.pop(context);
+                        _abrirFormulario(); //Cierra el menú
+                      },
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ],
+                    ListTile(
+                      leading: const Icon(Icons.copy, color: Colors.orange),
+                      title: const Text(
+                        'Utilizar plantilla guardada',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -453,13 +460,14 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
             Text(nota.notas.isEmpty ? "Sin notas adicionales" : nota.notas),
           ],
         ),
-        actions: [ //Acciones al abrir la nota
+        actions: [
+          //Acciones al abrir la nota
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
 
               final resultado = await Navigator.push(
-                context, 
+                context,
                 MaterialPageRoute(
                   builder: (context) => FormularioScreen(
                     fechaSeleccionada: nota.fecha,
@@ -470,18 +478,19 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
               if (resultado != null) {
                 _cargarNotasDeDB();
               }
-            } ,
-            child: const Text( //Botón de editar
+            },
+            child: const Text(
+              //Botón de editar
               "Editar",
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
             ),
           ),
-          TextButton( //Botón de cerrar
+          TextButton(
+            //Botón de cerrar
             onPressed: () => Navigator.pop(context),
             child: const Text("Cerrar", style: TextStyle(color: Colors.black)),
           ),
         ],
-        
       ),
     );
   }
